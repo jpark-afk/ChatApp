@@ -1,0 +1,31 @@
+/* IDL defition for ChatApp application */
+
+// const definitions
+const uint32 MAX_ID_LEN = 100;
+const uint32 MAX_NAME_LEN = 100;
+const uint32 MAX_MSG_ID_LEN = 256;
+const uint32 MAX_MSG_TXT_LEN = 1000;
+const uint32 MAX_MSG_USER_LEN = 100;
+
+// User structure
+@topic @appendable
+struct ChatUser {
+	@key
+	string<MAX_ID_LEN> user_id;
+
+	string<MAX_NAME_LEN> user_firstName;
+	string<MAX_NAME_LEN> user_lastName;
+};
+
+// Message structure
+@topic @appendable @autoid(hash)
+struct ChatMessage {
+	@key
+	string<MAX_MSG_ID_LEN> msg_id;
+
+	string<MAX_MSG_TXT_LEN> msg_content;
+	string<MAX_MSG_USER_LEN> msg_from;
+	string<MAX_MSG_USER_LEN> msg_to;
+};
+
+//EndOfIDL
