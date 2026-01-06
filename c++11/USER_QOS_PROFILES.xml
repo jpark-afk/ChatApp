@@ -42,23 +42,31 @@
             file is in the working directory when running the example.
         -->
         <qos_profile name="ChatApp_Profile" 
-                     base_name="BuiltinQosLib::Generic.StrictReliable"
-                     is_default_qos="true">
+                     is_default_qos="true" base_name="BuiltinQosLib::Generic.KeepLastReliable">            
 
             <!-- QoS specified to override the QoS in the base profile.
                  Configures the DataWriter in the example code. -->
             <datawriter_qos>
                 <publication_name>
-                    <name>ChatAppUserWriter</name>
+                    <name>ChatAppUserWriterQos</name>
                 </publication_name>
+                <ownership>
+                  <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
+                </ownership>
+                <ownership_strength>
+                  <value>1000000</value> 
+                </ownership_strength>
             </datawriter_qos>
 
             <!-- QoS specified to override the QoS in the base profile. 
                  Configures the DataReader in the example code. -->
             <datareader_qos>
                 <subscription_name>
-                    <name>ChatAppUserReader</name>
+                    <name>ChatAppUserReaderQos</name>
                 </subscription_name>
+                <ownership>
+                  <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
+                </ownership>
             </datareader_qos>
 
             <!-- QoS specified to override the QoS in the base profile. 
@@ -72,7 +80,9 @@
                 <participant_name>
                     <name>ChatAppParticipant</name>
                 </participant_name>
-
+                <transport_builtin>
+                  <mask>UDPv4</mask>
+                </transport_builtin>
             </domain_participant_qos>
         </qos_profile>
 

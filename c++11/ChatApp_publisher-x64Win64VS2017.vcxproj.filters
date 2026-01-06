@@ -24,7 +24,7 @@
     <ClCompile Include="ChatApp_Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ChatApp_User.cpp">
+    <ClCompile Include="ChatAppUser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,10 +35,18 @@
     <ClInclude Include="ChatAppPlugin.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Application.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="USER_QOS_PROFILES.xml">
       <Filter>Resource Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\ChatApp.idl">
+      <Filter>Resource Files</Filter>
+    </Midl>
   </ItemGroup>
 </Project>
