@@ -10,8 +10,8 @@ For more information, type 'rtiddsgen -help' at a command shell
 or consult the Code Generator User's Manual.
 */
 
-#ifndef ChatApp_1451509721_hpp
-#define ChatApp_1451509721_hpp
+#ifndef ChatApp_1451509820_hpp
+#define ChatApp_1451509820_hpp
 
 #include <iosfwd>
 
@@ -79,7 +79,7 @@ class NDDSUSERDllExport ChatUser {
 
     ChatUser();
 
-    ChatUser(const std::string& user_id_,const std::string& user_firstName_,const std::string& user_lastName_);
+    ChatUser(const std::string& user_id_,const std::string& user_group_,const std::string& user_firstName_,const std::string& user_lastName_);
 
     std::string& user_id() noexcept {
         return m_user_id_;
@@ -96,6 +96,22 @@ class NDDSUSERDllExport ChatUser {
 
     void user_id(std::string&& value) {
         m_user_id_ = std::move(value);
+    }
+    std::string& user_group() noexcept {
+        return m_user_group_;
+    }
+
+    const std::string& user_group() const noexcept {
+        return m_user_group_;
+    }
+
+    void user_group(const std::string& value) {
+
+        m_user_group_ = value;
+    }
+
+    void user_group(std::string&& value) {
+        m_user_group_ = std::move(value);
     }
     std::string& user_firstName() noexcept {
         return m_user_firstName_;
@@ -137,6 +153,7 @@ class NDDSUSERDllExport ChatUser {
   private:
 
     std::string m_user_id_;
+    std::string m_user_group_;
     std::string m_user_firstName_;
     std::string m_user_lastName_;
 
@@ -154,7 +171,7 @@ class NDDSUSERDllExport ChatMessage {
 
     ChatMessage();
 
-    ChatMessage(const std::string& msg_id_,const std::string& msg_content_,const std::string& msg_from_,const std::string& msg_to_);
+    ChatMessage(const std::string& msg_id_,const std::string& msg_content_,const std::string& msg_from_,const std::string& msg_to_user_,const std::string& msg_to_group_,int64_t msg_time_);
 
     std::string& msg_id() noexcept {
         return m_msg_id_;
@@ -204,22 +221,51 @@ class NDDSUSERDllExport ChatMessage {
     void msg_from(std::string&& value) {
         m_msg_from_ = std::move(value);
     }
-    std::string& msg_to() noexcept {
-        return m_msg_to_;
+    std::string& msg_to_user() noexcept {
+        return m_msg_to_user_;
     }
 
-    const std::string& msg_to() const noexcept {
-        return m_msg_to_;
+    const std::string& msg_to_user() const noexcept {
+        return m_msg_to_user_;
     }
 
-    void msg_to(const std::string& value) {
+    void msg_to_user(const std::string& value) {
 
-        m_msg_to_ = value;
+        m_msg_to_user_ = value;
     }
 
-    void msg_to(std::string&& value) {
-        m_msg_to_ = std::move(value);
+    void msg_to_user(std::string&& value) {
+        m_msg_to_user_ = std::move(value);
     }
+    std::string& msg_to_group() noexcept {
+        return m_msg_to_group_;
+    }
+
+    const std::string& msg_to_group() const noexcept {
+        return m_msg_to_group_;
+    }
+
+    void msg_to_group(const std::string& value) {
+
+        m_msg_to_group_ = value;
+    }
+
+    void msg_to_group(std::string&& value) {
+        m_msg_to_group_ = std::move(value);
+    }
+    int64_t& msg_time() noexcept {
+        return m_msg_time_;
+    }
+
+    const int64_t& msg_time() const noexcept {
+        return m_msg_time_;
+    }
+
+    void msg_time(int64_t value) {
+
+        m_msg_time_ = value;
+    }
+
     bool operator == (const ChatMessage& other_) const;
     bool operator != (const ChatMessage& other_) const;
 
@@ -230,7 +276,9 @@ class NDDSUSERDllExport ChatMessage {
     std::string m_msg_id_;
     std::string m_msg_content_;
     std::string m_msg_from_;
-    std::string m_msg_to_;
+    std::string m_msg_to_user_;
+    std::string m_msg_to_group_;
+    int64_t m_msg_time_;
 
 };
 
@@ -366,5 +414,5 @@ namespace rti {
 #define NDDSUSERDllExport
 #endif
 
-#endif // ChatApp_1451509721_hpp
+#endif // ChatApp_1451509820_hpp
 

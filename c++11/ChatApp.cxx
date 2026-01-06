@@ -29,13 +29,15 @@ or consult the Code Generator User's Manual.
 
 ChatUser::ChatUser() :
     m_user_id_ ("") ,
+    m_user_group_ ("") ,
     m_user_firstName_ ("") ,
     m_user_lastName_ ("")  {
 
 }   
 
-ChatUser::ChatUser (const std::string& user_id_,const std::string& user_firstName_,const std::string& user_lastName_):
+ChatUser::ChatUser (const std::string& user_id_,const std::string& user_group_,const std::string& user_firstName_,const std::string& user_lastName_):
     m_user_id_(user_id_), 
+    m_user_group_(user_group_), 
     m_user_firstName_(user_firstName_), 
     m_user_lastName_(user_lastName_) {
 }
@@ -44,12 +46,16 @@ void ChatUser::swap(ChatUser& other_)  noexcept
 {
     using std::swap;
     swap(m_user_id_, other_.m_user_id_);
+    swap(m_user_group_, other_.m_user_group_);
     swap(m_user_firstName_, other_.m_user_firstName_);
     swap(m_user_lastName_, other_.m_user_lastName_);
 }  
 
 bool ChatUser::operator == (const ChatUser& other_) const {
     if (m_user_id_ != other_.m_user_id_) {
+        return false;
+    }
+    if (m_user_group_ != other_.m_user_group_) {
         return false;
     }
     if (m_user_firstName_ != other_.m_user_firstName_) {
@@ -70,6 +76,7 @@ std::ostream& operator << (std::ostream& o,const ChatUser& sample)
     ::rti::util::StreamFlagSaver flag_saver (o);
     o <<"[";
     o << "user_id: " << sample.user_id ()<<", ";
+    o << "user_group: " << sample.user_group ()<<", ";
     o << "user_firstName: " << sample.user_firstName ()<<", ";
     o << "user_lastName: " << sample.user_lastName ();
     o <<"]";
@@ -82,15 +89,19 @@ ChatMessage::ChatMessage() :
     m_msg_id_ ("") ,
     m_msg_content_ ("") ,
     m_msg_from_ ("") ,
-    m_msg_to_ ("")  {
+    m_msg_to_user_ ("") ,
+    m_msg_to_group_ ("") ,
+    m_msg_time_ (0ll)  {
 
 }   
 
-ChatMessage::ChatMessage (const std::string& msg_id_,const std::string& msg_content_,const std::string& msg_from_,const std::string& msg_to_):
+ChatMessage::ChatMessage (const std::string& msg_id_,const std::string& msg_content_,const std::string& msg_from_,const std::string& msg_to_user_,const std::string& msg_to_group_,int64_t msg_time_):
     m_msg_id_(msg_id_), 
     m_msg_content_(msg_content_), 
     m_msg_from_(msg_from_), 
-    m_msg_to_(msg_to_) {
+    m_msg_to_user_(msg_to_user_), 
+    m_msg_to_group_(msg_to_group_), 
+    m_msg_time_(msg_time_) {
 }
 
 void ChatMessage::swap(ChatMessage& other_)  noexcept 
@@ -99,7 +110,9 @@ void ChatMessage::swap(ChatMessage& other_)  noexcept
     swap(m_msg_id_, other_.m_msg_id_);
     swap(m_msg_content_, other_.m_msg_content_);
     swap(m_msg_from_, other_.m_msg_from_);
-    swap(m_msg_to_, other_.m_msg_to_);
+    swap(m_msg_to_user_, other_.m_msg_to_user_);
+    swap(m_msg_to_group_, other_.m_msg_to_group_);
+    swap(m_msg_time_, other_.m_msg_time_);
 }  
 
 bool ChatMessage::operator == (const ChatMessage& other_) const {
@@ -112,7 +125,13 @@ bool ChatMessage::operator == (const ChatMessage& other_) const {
     if (m_msg_from_ != other_.m_msg_from_) {
         return false;
     }
-    if (m_msg_to_ != other_.m_msg_to_) {
+    if (m_msg_to_user_ != other_.m_msg_to_user_) {
+        return false;
+    }
+    if (m_msg_to_group_ != other_.m_msg_to_group_) {
+        return false;
+    }
+    if (m_msg_time_ != other_.m_msg_time_) {
         return false;
     }
     return true;
@@ -129,7 +148,9 @@ std::ostream& operator << (std::ostream& o,const ChatMessage& sample)
     o << "msg_id: " << sample.msg_id ()<<", ";
     o << "msg_content: " << sample.msg_content ()<<", ";
     o << "msg_from: " << sample.msg_from ()<<", ";
-    o << "msg_to: " << sample.msg_to ();
+    o << "msg_to_user: " << sample.msg_to_user ()<<", ";
+    o << "msg_to_group: " << sample.msg_to_group ()<<", ";
+    o << "msg_time: " << sample.msg_time ();
     o <<"]";
     return o;
 }
@@ -156,10 +177,11 @@ namespace rti {
                 static std::atomic_bool is_initialized {false};
 
                 static DDS_TypeCode ChatUser_g_tc_user_id_string;
+                static DDS_TypeCode ChatUser_g_tc_user_group_string;
                 static DDS_TypeCode ChatUser_g_tc_user_firstName_string;
                 static DDS_TypeCode ChatUser_g_tc_user_lastName_string;
 
-                static DDS_TypeCode_Member ChatUser_g_tc_members[3]=
+                static DDS_TypeCode_Member ChatUser_g_tc_members[4]=
                 {
 
                     {
@@ -181,7 +203,7 @@ namespace rti {
                         RTICdrTypeCodeAnnotations_INITIALIZER
                     }, 
                     {
-                        (char *)"user_firstName",/* Member name */
+                        (char *)"user_group",/* Member name */
                         {
                             1,/* Representation ID */
                             DDS_BOOLEAN_FALSE,/* Is a pointer? */
@@ -199,9 +221,27 @@ namespace rti {
                         RTICdrTypeCodeAnnotations_INITIALIZER
                     }, 
                     {
-                        (char *)"user_lastName",/* Member name */
+                        (char *)"user_firstName",/* Member name */
                         {
                             2,/* Representation ID */
+                            DDS_BOOLEAN_FALSE,/* Is a pointer? */
+                            -1, /* Bitfield bits */
+                            NULL/* Member type code is assigned later */
+                        },
+                        0, /* Ignored */
+                        0, /* Ignored */
+                        0, /* Ignored */
+                        NULL, /* Ignored */
+                        RTI_CDR_REQUIRED_MEMBER, /* Is a key? */
+                        DDS_PUBLIC_MEMBER,/* Member visibility */
+                        1,
+                        NULL, /* Ignored */
+                        RTICdrTypeCodeAnnotations_INITIALIZER
+                    }, 
+                    {
+                        (char *)"user_lastName",/* Member name */
+                        {
+                            3,/* Representation ID */
                             DDS_BOOLEAN_FALSE,/* Is a pointer? */
                             -1, /* Bitfield bits */
                             NULL/* Member type code is assigned later */
@@ -228,7 +268,7 @@ namespace rti {
                         0, /* Ignored */
                         0, /* Ignored */
                         NULL, /* Ignored */
-                        3, /* Number of members */
+                        4, /* Number of members */
                         ChatUser_g_tc_members, /* Members */
                         DDS_VM_NONE, /* Ignored */
                         RTICdrTypeCodeAnnotations_INITIALIZER,
@@ -242,14 +282,16 @@ namespace rti {
                 }
 
                 ChatUser_g_tc_user_id_string = initialize_string_typecode(((MAX_ID_LEN)));
+                ChatUser_g_tc_user_group_string = initialize_string_typecode(((MAX_NAME_LEN)));
                 ChatUser_g_tc_user_firstName_string = initialize_string_typecode(((MAX_NAME_LEN)));
                 ChatUser_g_tc_user_lastName_string = initialize_string_typecode(((MAX_NAME_LEN)));
 
                 ChatUser_g_tc._data._annotations._allowedDataRepresentationMask = 5;
 
                 ChatUser_g_tc_members[0]._representation._typeCode = (RTICdrTypeCode *)&ChatUser_g_tc_user_id_string;
-                ChatUser_g_tc_members[1]._representation._typeCode = (RTICdrTypeCode *)&ChatUser_g_tc_user_firstName_string;
-                ChatUser_g_tc_members[2]._representation._typeCode = (RTICdrTypeCode *)&ChatUser_g_tc_user_lastName_string;
+                ChatUser_g_tc_members[1]._representation._typeCode = (RTICdrTypeCode *)&ChatUser_g_tc_user_group_string;
+                ChatUser_g_tc_members[2]._representation._typeCode = (RTICdrTypeCode *)&ChatUser_g_tc_user_firstName_string;
+                ChatUser_g_tc_members[3]._representation._typeCode = (RTICdrTypeCode *)&ChatUser_g_tc_user_lastName_string;
 
                 /* Initialize the values for member annotations. */
                 ChatUser_g_tc_members[0]._annotations._defaultValue._d = RTI_XCDR_TK_STRING;
@@ -258,6 +300,8 @@ namespace rti {
                 ChatUser_g_tc_members[1]._annotations._defaultValue._u.string_value = (DDS_Char *) "";
                 ChatUser_g_tc_members[2]._annotations._defaultValue._d = RTI_XCDR_TK_STRING;
                 ChatUser_g_tc_members[2]._annotations._defaultValue._u.string_value = (DDS_Char *) "";
+                ChatUser_g_tc_members[3]._annotations._defaultValue._d = RTI_XCDR_TK_STRING;
+                ChatUser_g_tc_members[3]._annotations._defaultValue._u.string_value = (DDS_Char *) "";
 
                 ChatUser_g_tc._data._sampleAccessInfo = sample_access_info();
                 ChatUser_g_tc._data._typePlugin = type_plugin_info();    
@@ -273,7 +317,7 @@ namespace rti {
 
                 ::ChatUser *sample;
 
-                static RTIXCdrMemberAccessInfo ChatUser_g_memberAccessInfos[3] =
+                static RTIXCdrMemberAccessInfo ChatUser_g_memberAccessInfos[4] =
                 {RTIXCdrMemberAccessInfo_INITIALIZER};
 
                 static RTIXCdrSampleAccessInfo ChatUser_g_sampleAccessInfo = 
@@ -294,9 +338,12 @@ namespace rti {
                 (RTIXCdrUnsignedLong) ((char *)&sample->user_id() - (char *)sample);
 
                 ChatUser_g_memberAccessInfos[1].bindingMemberValueOffset[0] = 
-                (RTIXCdrUnsignedLong) ((char *)&sample->user_firstName() - (char *)sample);
+                (RTIXCdrUnsignedLong) ((char *)&sample->user_group() - (char *)sample);
 
                 ChatUser_g_memberAccessInfos[2].bindingMemberValueOffset[0] = 
+                (RTIXCdrUnsignedLong) ((char *)&sample->user_firstName() - (char *)sample);
+
+                ChatUser_g_memberAccessInfos[3].bindingMemberValueOffset[0] = 
                 (RTIXCdrUnsignedLong) ((char *)&sample->user_lastName() - (char *)sample);
 
                 ChatUser_g_sampleAccessInfo.memberAccessInfos = 
@@ -371,9 +418,10 @@ namespace rti {
                 static DDS_TypeCode ChatMessage_g_tc_msg_id_string;
                 static DDS_TypeCode ChatMessage_g_tc_msg_content_string;
                 static DDS_TypeCode ChatMessage_g_tc_msg_from_string;
-                static DDS_TypeCode ChatMessage_g_tc_msg_to_string;
+                static DDS_TypeCode ChatMessage_g_tc_msg_to_user_string;
+                static DDS_TypeCode ChatMessage_g_tc_msg_to_group_string;
 
-                static DDS_TypeCode_Member ChatMessage_g_tc_members[4]=
+                static DDS_TypeCode_Member ChatMessage_g_tc_members[6]=
                 {
 
                     {
@@ -431,9 +479,45 @@ namespace rti {
                         RTICdrTypeCodeAnnotations_INITIALIZER
                     }, 
                     {
-                        (char *)"msg_to",/* Member name */
+                        (char *)"msg_to_user",/* Member name */
                         {
-                            145285535,/* Representation ID */
+                            7632562,/* Representation ID */
+                            DDS_BOOLEAN_FALSE,/* Is a pointer? */
+                            -1, /* Bitfield bits */
+                            NULL/* Member type code is assigned later */
+                        },
+                        0, /* Ignored */
+                        0, /* Ignored */
+                        0, /* Ignored */
+                        NULL, /* Ignored */
+                        RTI_CDR_REQUIRED_MEMBER, /* Is a key? */
+                        DDS_PUBLIC_MEMBER,/* Member visibility */
+                        1,
+                        NULL, /* Ignored */
+                        RTICdrTypeCodeAnnotations_INITIALIZER
+                    }, 
+                    {
+                        (char *)"msg_to_group",/* Member name */
+                        {
+                            150755201,/* Representation ID */
+                            DDS_BOOLEAN_FALSE,/* Is a pointer? */
+                            -1, /* Bitfield bits */
+                            NULL/* Member type code is assigned later */
+                        },
+                        0, /* Ignored */
+                        0, /* Ignored */
+                        0, /* Ignored */
+                        NULL, /* Ignored */
+                        RTI_CDR_REQUIRED_MEMBER, /* Is a key? */
+                        DDS_PUBLIC_MEMBER,/* Member visibility */
+                        1,
+                        NULL, /* Ignored */
+                        RTICdrTypeCodeAnnotations_INITIALIZER
+                    }, 
+                    {
+                        (char *)"msg_time",/* Member name */
+                        {
+                            76134714,/* Representation ID */
                             DDS_BOOLEAN_FALSE,/* Is a pointer? */
                             -1, /* Bitfield bits */
                             NULL/* Member type code is assigned later */
@@ -460,7 +544,7 @@ namespace rti {
                         0, /* Ignored */
                         0, /* Ignored */
                         NULL, /* Ignored */
-                        4, /* Number of members */
+                        6, /* Number of members */
                         ChatMessage_g_tc_members, /* Members */
                         DDS_VM_NONE, /* Ignored */
                         RTICdrTypeCodeAnnotations_INITIALIZER,
@@ -476,14 +560,17 @@ namespace rti {
                 ChatMessage_g_tc_msg_id_string = initialize_string_typecode(((MAX_MSG_ID_LEN)));
                 ChatMessage_g_tc_msg_content_string = initialize_string_typecode(((MAX_MSG_TXT_LEN)));
                 ChatMessage_g_tc_msg_from_string = initialize_string_typecode(((MAX_MSG_USER_LEN)));
-                ChatMessage_g_tc_msg_to_string = initialize_string_typecode(((MAX_MSG_USER_LEN)));
+                ChatMessage_g_tc_msg_to_user_string = initialize_string_typecode(((MAX_MSG_USER_LEN)));
+                ChatMessage_g_tc_msg_to_group_string = initialize_string_typecode(((MAX_MSG_USER_LEN)));
 
                 ChatMessage_g_tc._data._annotations._allowedDataRepresentationMask = 5;
 
                 ChatMessage_g_tc_members[0]._representation._typeCode = (RTICdrTypeCode *)&ChatMessage_g_tc_msg_id_string;
                 ChatMessage_g_tc_members[1]._representation._typeCode = (RTICdrTypeCode *)&ChatMessage_g_tc_msg_content_string;
                 ChatMessage_g_tc_members[2]._representation._typeCode = (RTICdrTypeCode *)&ChatMessage_g_tc_msg_from_string;
-                ChatMessage_g_tc_members[3]._representation._typeCode = (RTICdrTypeCode *)&ChatMessage_g_tc_msg_to_string;
+                ChatMessage_g_tc_members[3]._representation._typeCode = (RTICdrTypeCode *)&ChatMessage_g_tc_msg_to_user_string;
+                ChatMessage_g_tc_members[4]._representation._typeCode = (RTICdrTypeCode *)&ChatMessage_g_tc_msg_to_group_string;
+                ChatMessage_g_tc_members[5]._representation._typeCode = (RTICdrTypeCode *)&DDS_g_tc_longlong;
 
                 /* Initialize the values for member annotations. */
                 ChatMessage_g_tc_members[0]._annotations._defaultValue._d = RTI_XCDR_TK_STRING;
@@ -494,6 +581,14 @@ namespace rti {
                 ChatMessage_g_tc_members[2]._annotations._defaultValue._u.string_value = (DDS_Char *) "";
                 ChatMessage_g_tc_members[3]._annotations._defaultValue._d = RTI_XCDR_TK_STRING;
                 ChatMessage_g_tc_members[3]._annotations._defaultValue._u.string_value = (DDS_Char *) "";
+                ChatMessage_g_tc_members[4]._annotations._defaultValue._d = RTI_XCDR_TK_STRING;
+                ChatMessage_g_tc_members[4]._annotations._defaultValue._u.string_value = (DDS_Char *) "";
+                ChatMessage_g_tc_members[5]._annotations._defaultValue._d = RTI_XCDR_TK_LONGLONG;
+                ChatMessage_g_tc_members[5]._annotations._defaultValue._u.long_long_value = 0ll;
+                ChatMessage_g_tc_members[5]._annotations._minValue._d = RTI_XCDR_TK_LONGLONG;
+                ChatMessage_g_tc_members[5]._annotations._minValue._u.long_long_value = RTIXCdrLongLong_MIN;
+                ChatMessage_g_tc_members[5]._annotations._maxValue._d = RTI_XCDR_TK_LONGLONG;
+                ChatMessage_g_tc_members[5]._annotations._maxValue._u.long_long_value = RTIXCdrLongLong_MAX;
 
                 ChatMessage_g_tc._data._sampleAccessInfo = sample_access_info();
                 ChatMessage_g_tc._data._typePlugin = type_plugin_info();    
@@ -509,7 +604,7 @@ namespace rti {
 
                 ::ChatMessage *sample;
 
-                static RTIXCdrMemberAccessInfo ChatMessage_g_memberAccessInfos[4] =
+                static RTIXCdrMemberAccessInfo ChatMessage_g_memberAccessInfos[6] =
                 {RTIXCdrMemberAccessInfo_INITIALIZER};
 
                 static RTIXCdrSampleAccessInfo ChatMessage_g_sampleAccessInfo = 
@@ -536,7 +631,13 @@ namespace rti {
                 (RTIXCdrUnsignedLong) ((char *)&sample->msg_from() - (char *)sample);
 
                 ChatMessage_g_memberAccessInfos[3].bindingMemberValueOffset[0] = 
-                (RTIXCdrUnsignedLong) ((char *)&sample->msg_to() - (char *)sample);
+                (RTIXCdrUnsignedLong) ((char *)&sample->msg_to_user() - (char *)sample);
+
+                ChatMessage_g_memberAccessInfos[4].bindingMemberValueOffset[0] = 
+                (RTIXCdrUnsignedLong) ((char *)&sample->msg_to_group() - (char *)sample);
+
+                ChatMessage_g_memberAccessInfos[5].bindingMemberValueOffset[0] = 
+                (RTIXCdrUnsignedLong) ((char *)&sample->msg_time() - (char *)sample);
 
                 ChatMessage_g_sampleAccessInfo.memberAccessInfos = 
                 ChatMessage_g_memberAccessInfos;
@@ -659,6 +760,7 @@ namespace dds {
         void topic_type_support< ::ChatUser >::reset_sample(::ChatUser& sample) 
         {
             sample.user_id("");
+            sample.user_group("");
             sample.user_firstName("");
             sample.user_lastName("");
         }
@@ -666,6 +768,7 @@ namespace dds {
         void topic_type_support< ::ChatUser >::allocate_sample(::ChatUser& sample, int, int) 
         {
             ::rti::topic::allocate_sample(sample.user_id(),  -1, (MAX_ID_LEN));
+            ::rti::topic::allocate_sample(sample.user_group(),  -1, (MAX_NAME_LEN));
             ::rti::topic::allocate_sample(sample.user_firstName(),  -1, (MAX_NAME_LEN));
             ::rti::topic::allocate_sample(sample.user_lastName(),  -1, (MAX_NAME_LEN));
         }
@@ -728,7 +831,9 @@ namespace dds {
             sample.msg_id("");
             sample.msg_content("");
             sample.msg_from("");
-            sample.msg_to("");
+            sample.msg_to_user("");
+            sample.msg_to_group("");
+            sample.msg_time(0ll);
         }
 
         void topic_type_support< ::ChatMessage >::allocate_sample(::ChatMessage& sample, int, int) 
@@ -736,7 +841,8 @@ namespace dds {
             ::rti::topic::allocate_sample(sample.msg_id(),  -1, (MAX_MSG_ID_LEN));
             ::rti::topic::allocate_sample(sample.msg_content(),  -1, (MAX_MSG_TXT_LEN));
             ::rti::topic::allocate_sample(sample.msg_from(),  -1, (MAX_MSG_USER_LEN));
-            ::rti::topic::allocate_sample(sample.msg_to(),  -1, (MAX_MSG_USER_LEN));
+            ::rti::topic::allocate_sample(sample.msg_to_user(),  -1, (MAX_MSG_USER_LEN));
+            ::rti::topic::allocate_sample(sample.msg_to_group(),  -1, (MAX_MSG_USER_LEN));
         }
     }
 }  

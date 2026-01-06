@@ -38,52 +38,65 @@
 #define MAX_EX_STRENGTH (1000000)
 
 /* Global variables */
-
+std::chrono::time_point<std::chrono::system_clock> g_reader_creation_time_ChatUser;
 //////
+
+std::ostream& chatapp_prompt(std::ostream& os) {
+	return os << std::endl << "chatApp>";
+}
 
 class ChatUserListener : public dds::sub::NoOpDataReaderListener<ChatUser> {
 public:
 	void on_data_available(dds::sub::DataReader<ChatUser>& reader) override {
-		auto samples = reader.take();
+		auto samples = reader.read();
 		for (const auto& sample : samples) {
 			// New instance
 			if (sample.info().valid() &&
 				sample.info().state().view_state() == dds::sub::status::ViewState::new_view()) {
 
-				std::string pid_str("None");
-				std::string ip_str("None");
+				//Time filtering
+				auto ns = std::chrono::nanoseconds(sample.info().source_timestamp().to_nanosecs());
+				std::chrono::system_clock::time_point src_time(
+					std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)
+				);
+				if (src_time >= g_reader_creation_time_ChatUser)
+				{
 
-				// find PID and IP
-				auto writer_handle = sample.info().publication_handle();		
-				try {
-					auto participant_data = rti::sub::matched_publication_participant_data(reader, writer_handle);
+					std::string pid_str("None");
+					std::string ip_str("None");
 
-					//PID
-					auto all_props = participant_data.extensions().property().get_all();
-					auto pid_it = all_props.find("dds.sys_info.process_id");
-					if (pid_it != all_props.end()) {
-						pid_str = pid_it->second;
-					}
+					// find PID and IP
+					auto writer_handle = sample.info().publication_handle();
+					try {
+						auto participant_data = rti::sub::matched_publication_participant_data(reader, writer_handle);
 
-					// IP address
-					for (const auto& locator : participant_data.extensions().default_unicast_locators()) {
-						const auto& addr = locator.address();
-						if (locator.kind() == DDS_LOCATOR_KIND_UDPv4 && (int)addr[12] == 192) {
-							std::ostringstream oss;
-							oss << "IP: "
-								<< (int)addr[12] << "."
-								<< (int)addr[13] << "."
-								<< (int)addr[14] << "."
-								<< (int)addr[15];
-							ip_str = oss.str();
+						//PID
+						auto all_props = participant_data.extensions().property().get_all();
+						auto pid_it = all_props.find("dds.sys_info.process_id");
+						if (pid_it != all_props.end()) {
+							pid_str = pid_it->second;
 						}
+
+						// IP address
+						for (const auto& locator : participant_data.extensions().default_unicast_locators()) {
+							const auto& addr = locator.address();
+							if (locator.kind() == DDS_LOCATOR_KIND_UDPv4 && (int)addr[12] == 192) {
+								std::ostringstream oss;
+								oss << "IP: "
+									<< (int)addr[12] << "."
+									<< (int)addr[13] << "."
+									<< (int)addr[14] << "."
+									<< (int)addr[15];
+								ip_str = oss.str();
+							}
+						}
+
+						std::cout << "# Discovered [" << sample.data().user_id() << "] running chat app in IP [" << ip_str
+							<< "] with Process ID [" << pid_str << "]." << chatapp_prompt;
 					}
-					
-					std::cout << "# Discovered [" << sample.data().user_id() << "] running chat app in IP [" << ip_str
-						<< "] with Process ID [" << pid_str << "]." << std::endl;
-				}
-				catch (const dds::core::Exception& e) {
-					// do nothing
+					catch (const dds::core::Exception& e) {
+						// do nothing
+					}
 				}
 
 			}
@@ -93,10 +106,10 @@ public:
 				ChatUser key_holder;
 				reader.key_value(key_holder, sample.info().instance_handle());
 				if (istate == dds::sub::status::InstanceState::not_alive_disposed()) {
-					std::cout << "# Dropped [" << key_holder.user_id() << "]."<< std::endl;
+					std::cout << "# Dropped [" << key_holder.user_id() << "]."<< chatapp_prompt;
 				}
 				else if (istate == dds::sub::status::InstanceState::not_alive_no_writers()) { //unregistered
-					std::cout << "# Dropped [" << key_holder.user_id() << "]." << std::endl;
+					std::cout << "# Dropped [" << key_holder.user_id() << "]." << chatapp_prompt;
 				}
 			}
 		}
@@ -139,7 +152,7 @@ void terminate_participants(void) {
 }
 
 /* Command processor in a chatApp prompt session */
-void processCommand(const std::string& input) {
+void processCommand(const std::string& input, dds::sub::DataReader<ChatUser> reader_user) {
 	std::stringstream ss(input);
 	std::string cmd;
 	ss >> cmd;
@@ -152,8 +165,9 @@ void processCommand(const std::string& input) {
 		exit(0);
 	}
 	else if (cmd == "list") {
-		std::cout << "[System] Listing items..." << std::endl;
+		//std::cout << "[System] Listing items..." << std::endl;
 		// Logic for list goes here
+		ChatAppUser_ShowActiveUsers(reader_user);
 	}
 	else if (cmd == "send") {
 		std::string target, message;
@@ -223,6 +237,7 @@ int main(int argc, char* argv[]) {
 	dds::sub::DataReader<ChatUser> reader_user(subscriber, topic_user);
 	auto readerListener = std::make_shared<ChatUserListener>();
 	reader_user.set_listener(readerListener, dds::core::status::StatusMask::all());
+	g_reader_creation_time_ChatUser = std::chrono::system_clock::now();
 
 	// Qos setting for Writer
 	dds::pub::qos::DataWriterQos writer_qos = publisher.default_datawriter_qos();
@@ -233,7 +248,7 @@ int main(int argc, char* argv[]) {
 	dds::pub::DataWriter<ChatUser> writer_user(publisher, topic_user, writer_qos);
 
 	// Thread for Writer-ChatUser
-	ChatUser user_info(args["-u"], args["-f"], args["-l"]);
+	ChatUser user_info(args["-u"], args["-g"], args["-f"], args["-l"]);
 	std::thread t_user_w(ChatAppUser_WriterThread, writer_user, user_info);
 
 	t_user_w.detach();
@@ -245,7 +260,7 @@ int main(int argc, char* argv[]) {
 		if (!std::getline(std::cin, line)) break; // Handle Ctrl+C or EOF
 
 		if (!line.empty()) {
-			processCommand(line);
+			processCommand(line, reader_user);
 		}
 	}
 

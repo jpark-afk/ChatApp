@@ -42,7 +42,7 @@
             file is in the working directory when running the example.
         -->
         <qos_profile name="ChatApp_Profile" 
-                     is_default_qos="true" base_name="BuiltinQosLib::Generic.KeepLastReliable">            
+                     is_default_qos="true" base_name="BuiltinQosLib::Generic.KeepLastReliable.TransientLocal">            
 
             <!-- QoS specified to override the QoS in the base profile.
                  Configures the DataWriter in the example code. -->

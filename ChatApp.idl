@@ -13,6 +13,7 @@ struct ChatUser {
 	@key
 	string<MAX_ID_LEN> user_id;
 
+	string<MAX_NAME_LEN> user_group;
 	string<MAX_NAME_LEN> user_firstName;
 	string<MAX_NAME_LEN> user_lastName;
 };
@@ -25,7 +26,9 @@ struct ChatMessage {
 
 	string<MAX_MSG_TXT_LEN> msg_content;
 	string<MAX_MSG_USER_LEN> msg_from;
-	string<MAX_MSG_USER_LEN> msg_to;
+	string<MAX_MSG_USER_LEN> msg_to_user;
+	string<MAX_MSG_USER_LEN> msg_to_group;
+	int64 msg_time;
 };
 
 //EndOfIDL
