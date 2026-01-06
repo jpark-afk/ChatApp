@@ -10,8 +10,8 @@ For more information, type 'rtiddsgen -help' at a command shell
 or consult the Code Generator User's Manual.
 */
 
-#ifndef ChatApp_1451509820_hpp
-#define ChatApp_1451509820_hpp
+#ifndef ChatApp_1451509760_hpp
+#define ChatApp_1451509760_hpp
 
 #include <iosfwd>
 
@@ -68,7 +68,7 @@ static const uint32_t MAX_ID_LEN = 100UL;
 
 static const uint32_t MAX_NAME_LEN = 100UL;
 
-static const uint32_t MAX_MSG_ID_LEN = 256UL;
+static const uint32_t MAX_MSG_ID_LEN = 64UL;
 
 static const uint32_t MAX_MSG_TXT_LEN = 1000UL;
 
@@ -171,7 +171,7 @@ class NDDSUSERDllExport ChatMessage {
 
     ChatMessage();
 
-    ChatMessage(const std::string& msg_id_,const std::string& msg_content_,const std::string& msg_from_,const std::string& msg_to_user_,const std::string& msg_to_group_,int64_t msg_time_);
+    ChatMessage(const std::string& msg_id_,const std::string& msg_content_,const std::string& msg_from_,const std::string& msg_to_,int64_t msg_time_);
 
     std::string& msg_id() noexcept {
         return m_msg_id_;
@@ -221,37 +221,21 @@ class NDDSUSERDllExport ChatMessage {
     void msg_from(std::string&& value) {
         m_msg_from_ = std::move(value);
     }
-    std::string& msg_to_user() noexcept {
-        return m_msg_to_user_;
+    std::string& msg_to() noexcept {
+        return m_msg_to_;
     }
 
-    const std::string& msg_to_user() const noexcept {
-        return m_msg_to_user_;
+    const std::string& msg_to() const noexcept {
+        return m_msg_to_;
     }
 
-    void msg_to_user(const std::string& value) {
+    void msg_to(const std::string& value) {
 
-        m_msg_to_user_ = value;
+        m_msg_to_ = value;
     }
 
-    void msg_to_user(std::string&& value) {
-        m_msg_to_user_ = std::move(value);
-    }
-    std::string& msg_to_group() noexcept {
-        return m_msg_to_group_;
-    }
-
-    const std::string& msg_to_group() const noexcept {
-        return m_msg_to_group_;
-    }
-
-    void msg_to_group(const std::string& value) {
-
-        m_msg_to_group_ = value;
-    }
-
-    void msg_to_group(std::string&& value) {
-        m_msg_to_group_ = std::move(value);
+    void msg_to(std::string&& value) {
+        m_msg_to_ = std::move(value);
     }
     int64_t& msg_time() noexcept {
         return m_msg_time_;
@@ -276,8 +260,7 @@ class NDDSUSERDllExport ChatMessage {
     std::string m_msg_id_;
     std::string m_msg_content_;
     std::string m_msg_from_;
-    std::string m_msg_to_user_;
-    std::string m_msg_to_group_;
+    std::string m_msg_to_;
     int64_t m_msg_time_;
 
 };
@@ -414,5 +397,5 @@ namespace rti {
 #define NDDSUSERDllExport
 #endif
 
-#endif // ChatApp_1451509820_hpp
+#endif // ChatApp_1451509760_hpp
 

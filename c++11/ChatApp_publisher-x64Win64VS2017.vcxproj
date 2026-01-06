@@ -97,9 +97,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>
-        $(NDDSHOME)\include;$(NDDSHOME)\include\ndds;$(NDDSHOME)\include\ndds\hpp;        %(AdditionalIncludeDirectories)
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(NDDSHOME)\include;$(NDDSHOME)\include\ndds;$(NDDSHOME)\include\ndds\hpp;$(NDDSHOME)\third_party\openssl-3.5.1\x64Win64VS2017\release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;RTI_STATIC;_CONSOLE;WIN32;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -120,16 +118,10 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>
-                nddscpp2zd.lib;nddsczd.lib;nddscorezd.lib;                        netapi32.lib;advapi32.lib;user32.lib;WS2_32.lib;
-        %(AdditionalDependencies)
-      </AdditionalDependencies>
+      <AdditionalDependencies>nddscpp2zd.lib;nddsczd.lib;nddscorezd.lib;netapi32.lib;advapi32.lib;user32.lib;WS2_32.lib;libssl.lib;libcrypto.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\objs\x64Win64VS2017\chatApp.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>
-        $(NDDSHOME)\lib\x64Win64VS2017;
-                %(AdditionalLibraryDirectories)
-      </AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(NDDSHOME)\lib\x64Win64VS2017;$(NDDSHOME)\third_party\openssl-3.5.1\x64Win64VS2017\release\bin;$(NDDSHOME)\third_party\openssl-3.5.1\x64Win64VS2017\release\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\objs\x64Win64VS2017\ChatApp.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -290,7 +282,7 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ChatApp_Main.cpp" />
+    <ClCompile Include="ChatApp_Main.cxx" />
     <ClCompile Include="ChatAppPlugin.cxx">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -309,7 +301,8 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="ChatAppUser.cpp" />
+    <ClCompile Include="ChatMessage.cxx" />
+    <ClCompile Include="ChatUser.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.hpp" />
@@ -319,6 +312,7 @@
   <ItemGroup>
     <None Include="USER_QOS_PROFILES.xml">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>

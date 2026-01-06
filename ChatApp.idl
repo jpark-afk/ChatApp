@@ -3,7 +3,7 @@
 // const definitions
 const uint32 MAX_ID_LEN = 100;
 const uint32 MAX_NAME_LEN = 100;
-const uint32 MAX_MSG_ID_LEN = 256;
+const uint32 MAX_MSG_ID_LEN = 64;
 const uint32 MAX_MSG_TXT_LEN = 1000;
 const uint32 MAX_MSG_USER_LEN = 100;
 
@@ -19,15 +19,14 @@ struct ChatUser {
 };
 
 // Message structure
-@topic @appendable @autoid(hash)
+@topic @appendable 
 struct ChatMessage {
 	@key
 	string<MAX_MSG_ID_LEN> msg_id;
 
 	string<MAX_MSG_TXT_LEN> msg_content;
 	string<MAX_MSG_USER_LEN> msg_from;
-	string<MAX_MSG_USER_LEN> msg_to_user;
-	string<MAX_MSG_USER_LEN> msg_to_group;
+	string<MAX_MSG_USER_LEN> msg_to;
 	int64 msg_time;
 };
 

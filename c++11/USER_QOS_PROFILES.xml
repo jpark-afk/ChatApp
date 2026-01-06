@@ -46,9 +46,9 @@
 
             <!-- QoS specified to override the QoS in the base profile.
                  Configures the DataWriter in the example code. -->
-            <datawriter_qos>
+            <datawriter_qos topic_filter="ChatUser">
                 <publication_name>
-                    <name>ChatAppUserWriterQos</name>
+                    <name>ChatUserWriterQos</name>
                 </publication_name>
                 <ownership>
                   <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
@@ -60,14 +60,49 @@
 
             <!-- QoS specified to override the QoS in the base profile. 
                  Configures the DataReader in the example code. -->
-            <datareader_qos>
+            <datareader_qos topic_filter="ChatUser">
                 <subscription_name>
-                    <name>ChatAppUserReaderQos</name>
+                    <name>ChatUserReaderQos</name>
                 </subscription_name>
                 <ownership>
                   <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
                 </ownership>
+                <multicast>
+                  <value>
+                    <element>
+                      <receive_address>239.255.5.1</receive_address>
+                    </element>
+                  </value>
+                </multicast>
             </datareader_qos>
+          
+          <!-- ChatMessage: Persistent Durability (RTI Persistence Service required) -->
+          <datawriter_qos topic_filter="ChatMessage" base_name="BuiltinQosLib::Generic.KeepLastReliable.TransientLocal">
+              <publication_name>
+                      <name>ChatMessageWriterQos</name>
+                  </publication_name>
+                  <ownership>
+                    <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
+                  </ownership>
+                  <ownership_strength>
+                    <value>1000000</value> 
+                  </ownership_strength>
+          </datawriter_qos>
+          <datareader_qos topic_filter="ChatMessage" base_name="BuiltinQosLib::Generic.KeepLastReliable.TransientLocal">            
+              <subscription_name>
+                  <name>ChatMessageReaderQos</name>
+              </subscription_name>
+              <ownership>
+                <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
+              </ownership>
+              <multicast>
+                <value>
+                  <element>
+                    <receive_address>239.255.5.1</receive_address>
+                  </element>
+                </value>
+              </multicast>
+          </datareader_qos>
 
             <!-- QoS specified to override the QoS in the base profile. 
                  Configures the DomainParticipant in the example code. -->

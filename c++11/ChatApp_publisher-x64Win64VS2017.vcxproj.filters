@@ -21,10 +21,13 @@
     <ClCompile Include="ChatApp.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ChatApp_Main.cpp">
+    <ClCompile Include="ChatApp_Main.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ChatAppUser.cpp">
+    <ClCompile Include="ChatUser.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ChatMessage.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
