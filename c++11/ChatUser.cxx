@@ -7,8 +7,6 @@
 
 #include "Application.hpp"
 
-extern std::ostream& chatapp_prompt(std::ostream&);
-
 void ChatUser_WriterThread(dds::pub::DataWriter<ChatUser> writer, ChatUser user_info) {
 	// Wait until connection	
 	do {
@@ -21,10 +19,6 @@ void ChatUser_WriterThread(dds::pub::DataWriter<ChatUser> writer, ChatUser user_
 
 	writer.write(user_info);
 
-	/*while (true) {		
-		std::cout << "Waiting in the User Writer Thread" << std::endl;
-		std::this_thread::sleep_for(std::chrono::seconds(3));
-	}*/
 }
 
 void ChatUser_ShowActiveUsers(dds::sub::DataReader<ChatUser> reader)

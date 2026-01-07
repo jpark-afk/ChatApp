@@ -22,7 +22,7 @@
     $NDDSHOME/resource/xml/ directory.
 -->
 <dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     xsi:noNamespaceSchemaLocation="https://community.rti.com/schema/current/rti_dds_qos_profiles.xsd">
+     xsi:noNamespaceSchemaLocation="https://community.rti.com/schema/7.3.1/rti_dds_qos_profiles.xsd">
     <!--
         QoS Library containing the QoS profile used in this example.
         A QoS library is a named set of QoS profiles.
@@ -42,14 +42,20 @@
             file is in the working directory when running the example.
         -->
         <qos_profile name="ChatApp_Profile" 
-                     is_default_qos="true" base_name="BuiltinQosLib::Generic.KeepLastReliable.TransientLocal">            
-
+                     is_default_qos="true" base_name="BuiltinQosLib::Generic.KeepLastReliable.Persistent">            
+          
             <!-- QoS specified to override the QoS in the base profile.
                  Configures the DataWriter in the example code. -->
             <datawriter_qos topic_filter="ChatUser">
-                <publication_name>
-                    <name>ChatUserWriterQos</name>
-                </publication_name>
+                <reliability>
+                    <kind>RELIABLE_RELIABILITY_QOS</kind>
+                </reliability>
+                <history>
+                    <kind>KEEP_LAST_HISTORY_QOS</kind>
+                </history>
+                <durability>
+                    <kind>TRANSIENT_LOCAL_DURABILITY_QOS</kind>
+                </durability>
                 <ownership>
                   <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
                 </ownership>
@@ -61,9 +67,15 @@
             <!-- QoS specified to override the QoS in the base profile. 
                  Configures the DataReader in the example code. -->
             <datareader_qos topic_filter="ChatUser">
-                <subscription_name>
-                    <name>ChatUserReaderQos</name>
-                </subscription_name>
+                <reliability>
+                    <kind>RELIABLE_RELIABILITY_QOS</kind>
+                </reliability>
+                <history>
+                    <kind>KEEP_LAST_HISTORY_QOS</kind>
+                </history>
+                <durability>
+                    <kind>TRANSIENT_LOCAL_DURABILITY_QOS</kind>
+                </durability>
                 <ownership>
                   <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
                 </ownership>
@@ -77,24 +89,33 @@
             </datareader_qos>
           
           <!-- ChatMessage: Persistent Durability (RTI Persistence Service required) -->
-          <datawriter_qos topic_filter="ChatMessage" base_name="BuiltinQosLib::Generic.KeepLastReliable.TransientLocal">
-              <publication_name>
-                      <name>ChatMessageWriterQos</name>
-                  </publication_name>
-                  <ownership>
-                    <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
-                  </ownership>
-                  <ownership_strength>
-                    <value>1000000</value> 
-                  </ownership_strength>
-          </datawriter_qos>
-          <datareader_qos topic_filter="ChatMessage" base_name="BuiltinQosLib::Generic.KeepLastReliable.TransientLocal">            
-              <subscription_name>
-                  <name>ChatMessageReaderQos</name>
-              </subscription_name>
+          <datawriter_qos topic_filter="ChatMessage">
+              <history>
+                  <kind>KEEP_LAST_HISTORY_QOS</kind>
+              </history>
+              <reliability>
+                  <kind>RELIABLE_RELIABILITY_QOS</kind>
+              </reliability>
               <ownership>
                 <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
               </ownership>
+              <durability>
+                <kind>TRANSIENT_DURABILITY_QOS</kind>
+              </durability>
+          </datawriter_qos>
+          <datareader_qos topic_filter="ChatMessage">   
+              <history>
+                  <kind>KEEP_ALL_HISTORY_QOS</kind>
+              </history>
+              <reliability>
+                  <kind>RELIABLE_RELIABILITY_QOS</kind>
+              </reliability>                    
+              <ownership>
+                <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
+              </ownership>
+              <durability>
+                <kind>TRANSIENT_DURABILITY_QOS</kind>
+              </durability>              
               <multicast>
                 <value>
                   <element>

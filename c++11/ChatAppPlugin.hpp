@@ -10,8 +10,8 @@ For more information, type 'rtiddsgen -help' at a command shell
 or consult the Code Generator User's Manual.
 */
 
-#ifndef ChatAppPlugin_1451509760_h
-#define ChatAppPlugin_1451509760_h
+#ifndef ChatAppPlugin_1451509765_h
+#define ChatAppPlugin_1451509765_h
 
 #include "ChatApp.hpp"
 
@@ -453,5 +453,5 @@ ChatMessagePlugin_delete(struct PRESTypePlugin *);
 #define NDDSUSERDllExport
 #endif
 
-#endif /* ChatAppPlugin_1451509760_h */
+#endif /* ChatAppPlugin_1451509765_h */
 

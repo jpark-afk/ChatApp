@@ -10,8 +10,8 @@ For more information, type 'rtiddsgen -help' at a command shell
 or consult the Code Generator User's Manual.
 */
 
-#ifndef ChatApp_1451509760_hpp
-#define ChatApp_1451509760_hpp
+#ifndef ChatApp_1451509765_hpp
+#define ChatApp_1451509765_hpp
 
 #include <iosfwd>
 
@@ -171,23 +171,23 @@ class NDDSUSERDllExport ChatMessage {
 
     ChatMessage();
 
-    ChatMessage(const std::string& msg_id_,const std::string& msg_content_,const std::string& msg_from_,const std::string& msg_to_,int64_t msg_time_);
+    ChatMessage(const std::string& msg_from_,const std::string& msg_content_,const std::string& msg_to_,int64_t msg_time_);
 
-    std::string& msg_id() noexcept {
-        return m_msg_id_;
+    std::string& msg_from() noexcept {
+        return m_msg_from_;
     }
 
-    const std::string& msg_id() const noexcept {
-        return m_msg_id_;
+    const std::string& msg_from() const noexcept {
+        return m_msg_from_;
     }
 
-    void msg_id(const std::string& value) {
+    void msg_from(const std::string& value) {
 
-        m_msg_id_ = value;
+        m_msg_from_ = value;
     }
 
-    void msg_id(std::string&& value) {
-        m_msg_id_ = std::move(value);
+    void msg_from(std::string&& value) {
+        m_msg_from_ = std::move(value);
     }
     std::string& msg_content() noexcept {
         return m_msg_content_;
@@ -204,22 +204,6 @@ class NDDSUSERDllExport ChatMessage {
 
     void msg_content(std::string&& value) {
         m_msg_content_ = std::move(value);
-    }
-    std::string& msg_from() noexcept {
-        return m_msg_from_;
-    }
-
-    const std::string& msg_from() const noexcept {
-        return m_msg_from_;
-    }
-
-    void msg_from(const std::string& value) {
-
-        m_msg_from_ = value;
-    }
-
-    void msg_from(std::string&& value) {
-        m_msg_from_ = std::move(value);
     }
     std::string& msg_to() noexcept {
         return m_msg_to_;
@@ -257,9 +241,8 @@ class NDDSUSERDllExport ChatMessage {
 
   private:
 
-    std::string m_msg_id_;
-    std::string m_msg_content_;
     std::string m_msg_from_;
+    std::string m_msg_content_;
     std::string m_msg_to_;
     int64_t m_msg_time_;
 
@@ -397,5 +380,5 @@ namespace rti {
 #define NDDSUSERDllExport
 #endif
 
-#endif // ChatApp_1451509760_hpp
+#endif // ChatApp_1451509765_hpp
 

@@ -1290,7 +1290,7 @@ ChatMessagePlugin_instance_to_key(
     try {
         if (endpoint_data) {} /* To avoid warnings */   
 
-        dst->msg_id() = src->msg_id();
+        dst->msg_from() = src->msg_from();
         return RTI_TRUE;
     } catch (...) {
         return RTI_FALSE;
@@ -1305,7 +1305,7 @@ ChatMessagePlugin_key_to_instance(
 {
     try {
         if (endpoint_data) {} /* To avoid warnings */   
-        dst->msg_id() = src->msg_id();
+        dst->msg_from() = src->msg_from();
         return RTI_TRUE;
     } catch (...) {
         return RTI_FALSE;

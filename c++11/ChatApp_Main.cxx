@@ -42,6 +42,7 @@ std::chrono::time_point<std::chrono::system_clock> g_reader_creation_time_ChatUs
 
 dds::pub::DataWriter<ChatMessage> * g_writer_msg;
 ChatUser g_current_user;
+bool g_debug_enabled = false;
 //////
 
 std::ostream& chatapp_prompt(std::ostream& os) {
@@ -51,11 +52,11 @@ std::ostream& chatapp_prompt(std::ostream& os) {
 class ChatUserListener : public dds::sub::NoOpDataReaderListener<ChatUser> {
 public:
 	void on_data_available(dds::sub::DataReader<ChatUser>& reader) override {
-		auto samples = reader.read();
+		auto samples = reader.take();
 		for (const auto& sample : samples) {
 			// New instance
-			if (sample.info().valid() &&
-				sample.info().state().view_state() == dds::sub::status::ViewState::new_view()) {
+			if (sample.info().valid() ){//&&
+				//sample.info().state().view_state() == dds::sub::status::ViewState::new_view()) {
 
 				//Time filtering
 				auto ns = std::chrono::nanoseconds(sample.info().source_timestamp().to_nanosecs());
@@ -91,9 +92,8 @@ public:
 							ip_str = oss.str();
 						}
 					}
-
-					std::cout << "# Discovered [" << sample.data().user_id() << "] running chat app in IP [" << ip_str
-						<< "] with Process ID [" << pid_str << "]." << chatapp_prompt;
+					print_debug("# Discovered [", sample.data().user_id(), "] running chat app in IP [", ip_str,
+						"] with Process ID [", pid_str, "].");
 				}
 
 			}
@@ -103,10 +103,10 @@ public:
 				ChatUser key_holder;
 				reader.key_value(key_holder, sample.info().instance_handle());
 				if (istate == dds::sub::status::InstanceState::not_alive_disposed()) {
-					std::cout << "# Dropped [" << key_holder.user_id() << "]."<< chatapp_prompt;
+					print_debug("# Dropped [", key_holder.user_id(), "].");
 				}
 				else if (istate == dds::sub::status::InstanceState::not_alive_no_writers()) { //unregistered
-					std::cout << "# Dropped [" << key_holder.user_id() << "]." << chatapp_prompt;
+					print_debug("# Dropped [", key_holder.user_id(), "].");
 				}
 
 				//delete the sample from queue
@@ -132,7 +132,7 @@ uint32_t make_strength_from_now() {
 	auto now_c = system_clock::to_time_t(now);
 	std::tm now_tm;
 	localtime_s(&now_tm, &now_c);
-	// strength = (h*10000000) + (m*100000) + (s*1000) + ms
+
 	int32_t time_converted = now_tm.tm_hour * 10000000
 		+ now_tm.tm_min * 100000
 		+ now_tm.tm_sec * 1000
@@ -166,15 +166,9 @@ int processCommand(const std::string& input, dds::sub::DataReader<ChatUser> read
 	ss >> cmd;
 
 	if (cmd == "exit") {
-		// application shutdown
-		//terminate_participants();
-		//dds::domain::DomainParticipant::finalize_participant_factory();
-
-		//exit(0);
 		return -1;
 	}
 	else if (cmd == "list") {
-		//std::cout << "[System] Listing items..." << std::endl;
 		// Logic for list goes here
 		ChatUser_ShowActiveUsers(reader_user);
 	}
@@ -182,14 +176,12 @@ int processCommand(const std::string& input, dds::sub::DataReader<ChatUser> read
 		std::string target, message;
 		ss >> target;
 
-		// std::quoted handles strings with spaces wrapped in " "
 		ss >> std::quoted(message);
 
 		if (target.empty() || message.empty()) {
 			std::cout << "Usage: send <target> \"message\"" << std::endl;
 		}
 		else {
-			//std::cout << ">> Sending to [" << target << "]: " << message << std::endl;
 			// Send a message to the Writer_ChatMessage
 			int32_t result = ChatMessage_SendMessage(g_current_user, target, message, g_writer_msg);
 		}
@@ -236,6 +228,7 @@ int main(int argc, char* argv[]) {
 	std::cout << "LastName: " << args["-l"] << std::endl;
 	if (args.count("-d") > 0) {
 		std::cout << "Debug Option ENABLED." << std::endl;
+		g_debug_enabled = true;
 	}
 
 	// DDS initialization
@@ -269,9 +262,13 @@ int main(int argc, char* argv[]) {
 
 	// Reader-ChatMessage
 	auto reader_msg_qos = qos_provider.extensions().datareader_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatMessage");
+	
+	/*std::string session_name = user_info.user_id();
+	reader_msg_qos.policy<rti::core::policy::EntityName>().name(session_name);
+	reader_msg_qos.policy<rti::core::policy::EntityName>().role_name(session_name);*/
+	
 	// ContentFilteredTopic
 	std::string filter_expr = "msg_to = %0 OR msg_to = %1";
-	//std::vector<std::string> filter_params = { user_info.user_id(), user_info.user_group() };
 	std::vector<std::string> filter_params = {
 		"'" + user_info.user_id() + "'",
 		"'" + user_info.user_group() + "'"
@@ -281,14 +278,15 @@ int main(int argc, char* argv[]) {
 		"FilteredChatMessage",
 		dds::topic::Filter(filter_expr, filter_params)
 	);
-	dds::sub::DataReader<ChatMessage> reader_msg(subscriber, filtered_topic, reader_user_qos);
+	dds::sub::DataReader<ChatMessage> reader_msg(subscriber, filtered_topic, reader_msg_qos);
 	// Thread for Reader-ChatMessage
-	std::thread t_msg_w(ChatMessage_ReaderThread, reader_msg);
-	t_msg_w.detach();
+	std::thread t_msg_r(ChatMessage_ReaderThread, reader_msg);
+	t_msg_r.detach();
 
 	// Writer-ChatMessage
 	auto writer_msg_qos = qos_provider.extensions().datawriter_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatMessage");
 	dds::pub::DataWriter<ChatMessage> writer_msg(publisher, topic_message, writer_msg_qos);
+	writer_msg_qos << dds::core::policy::OwnershipStrength(strength);
 	g_writer_msg = &writer_msg; // make a global reference	 
 
 	// --- Main Interactive Loop ---
