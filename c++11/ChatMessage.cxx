@@ -75,5 +75,8 @@ void ChatMessage_SendMessage(ChatUser user_info, std::string receiver, std::stri
 
 	//send message
 	p_writer->write(sample);
+
+	//Auto send user info
+	g_writer_user->write(user_info);
 }
 

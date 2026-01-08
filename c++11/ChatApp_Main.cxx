@@ -41,6 +41,7 @@
 std::chrono::time_point<std::chrono::system_clock> g_reader_creation_time_ChatUser;
 
 dds::pub::DataWriter<ChatUser> * g_writer_user;
+dds::sub::DataReader<ChatMessage> * g_reader_msg;
 dds::pub::DataWriter<ChatMessage> * g_writer_msg;
 ChatUser g_current_user;
 bool g_debug_enabled = false;
@@ -157,10 +158,11 @@ int processCommand(const std::string& input, dds::sub::DataReader<ChatUser> read
 
 	if (cmd == "quit") {
 		reader_user.close();
-		
+
 		dds::core::InstanceHandle handle = g_writer_user->lookup_instance(g_current_user);
+		g_writer_user->dispose_instance(handle);
 		g_writer_user->unregister_instance(handle);
-		
+
 		return -1;
 	}
 	else if (cmd == "list") {
@@ -257,10 +259,11 @@ int main(int argc, char* argv[]) {
 	///* Reader-ChatMessage */
 	auto reader_msg_qos = qos_provider.extensions().datareader_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatMessage");		
 	// ContentFilteredTopic
-	std::string filter_expr = "msg_to = %0 OR msg_to = %1";
+	std::string filter_expr = "(msg_to = %0 OR msg_to = %1) AND msg_from <> %2";
 	std::vector<std::string> filter_params = {
 		"'" + user_info.user_id() + "'",
-		"'" + user_info.user_group() + "'"
+		"'" + user_info.user_group() + "'",
+		"'" + user_info.user_id() + "'"
 	};
 	dds::topic::ContentFilteredTopic<ChatMessage> filtered_topic(
 		topic_message,
@@ -271,13 +274,14 @@ int main(int argc, char* argv[]) {
 	// Thread for Reader-ChatMessage
 	std::thread t_msg_r(ChatMessage_ReaderThread, reader_msg);
 	t_msg_r.detach();
+	g_reader_msg = &reader_msg;
 
 	///* Writer-ChatMessage */
 	auto writer_msg_qos = qos_provider.extensions().datawriter_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatMessage");
-	dds::pub::DataWriter<ChatMessage> writer_msg(publisher, topic_message, writer_msg_qos);
 	writer_msg_qos << dds::core::policy::OwnershipStrength(strength);
+	dds::pub::DataWriter<ChatMessage> writer_msg(publisher, topic_message, writer_msg_qos);	
 	g_writer_msg = &writer_msg; // make a global reference	 
-
+	
 	// --- Main Interactive Loop ---
 	std::string line;
 	int return_code = 0;

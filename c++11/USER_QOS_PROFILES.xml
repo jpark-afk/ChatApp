@@ -88,13 +88,14 @@
           <!-- ChatMessage: Persistent Durability (RTI Persistence Service required) -->
           <datawriter_qos topic_filter="ChatMessage">
               <history>
-                  <kind>KEEP_ALL_HISTORY_QOS</kind>
+                  <kind>KEEP_LAST_HISTORY_QOS</kind>
+                  <depth>3</depth>
               </history>
               <reliability>
                   <kind>RELIABLE_RELIABILITY_QOS</kind>
               </reliability>
               <ownership>
-                <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
+                <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>                
               </ownership>
               <durability>
                 <kind>TRANSIENT_DURABILITY_QOS</kind>
@@ -102,7 +103,8 @@
           </datawriter_qos>
           <datareader_qos topic_filter="ChatMessage">   
               <history>
-                  <kind>KEEP_ALL_HISTORY_QOS</kind>
+                  <kind>KEEP_LAST_HISTORY_QOS</kind>
+                  <depth>3</depth>
               </history>
               <reliability>
                   <kind>RELIABLE_RELIABILITY_QOS</kind>
