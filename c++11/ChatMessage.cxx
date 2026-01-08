@@ -4,33 +4,34 @@
 #include <chrono>
 #include <string>
 #include <sstream>
-#include <openssl/sha.h>
 
 #include <dds/pub/ddspub.hpp>
 
 #include "Application.hpp"
 
-bool static g_message_found = false;
+bool static g_message_found = false; // if ReadCondition captured a message
 
-void ChatMessage_ReaderThread(dds::sub::DataReader<ChatMessage> reader) {
-	
+/* ChatMessage Reader - filtering by msg_from and implemented by WaitSet */
+void ChatMessage_ReaderThread(dds::sub::DataReader<ChatMessage> reader) {	
 	// Read Condition
 	dds::sub::cond::ReadCondition read_condition(
 		reader,
 		dds::sub::status::DataState::new_data(),
 		[&reader]() {
-		auto samples = reader.take();
-		for (const auto& sample : samples) {
-			if (sample.info().valid()) {
-				std::cout << std::endl;
-				std::cout << "* " << sample.data().msg_from() << ">" << sample.data().msg_content() << std::endl;
-				
-				g_message_found = true;
-				//reader.extensions().acknowledge_sample(sample.info());
+			auto samples = reader.take();
+			for (const auto& sample : samples) {
+				if (sample.info().valid()) {					
+					//if (g_writer_msg!=nullptr && (sample.info().publication_handle() != g_writer_msg->instance_handle())) {
+						std::cout << std::endl;
+						std::cout << "* " << sample.data().msg_from() << ">" << sample.data().msg_content() << std::endl;
+
+						g_message_found = true;
+						//reader.extensions().acknowledge_sample(sample.info());
+					//}
+				}
 			}
+			//samples.return_loan();
 		}
-		//samples.return_loan();
-	}
 	);	
 	
 	// WaitSet
@@ -46,11 +47,12 @@ void ChatMessage_ReaderThread(dds::sub::DataReader<ChatMessage> reader) {
 	}
 }
 
-int32_t ChatMessage_SendMessage(ChatUser user_info, std::string receiver, std::string contents, dds::pub::DataWriter<ChatMessage> * p_writer)
+/* ChatMessage Writer - create necessary field information */
+void ChatMessage_SendMessage(ChatUser user_info, std::string receiver, std::string contents, dds::pub::DataWriter<ChatMessage> * p_writer)
 {
 	/* IDL definition
-		string<MAX_MSG_TXT_LEN> msg_content
 		string<MAX_MSG_USER_LEN> msg_from
+		string<MAX_MSG_TXT_LEN> msg_content		
 		string<MAX_MSG_USER_LEN> msg_to
 		int64 msg_time
 	*/
@@ -60,17 +62,6 @@ int32_t ChatMessage_SendMessage(ChatUser user_info, std::string receiver, std::s
 	int64_t msg_time = std::chrono::duration_cast<std::chrono::milliseconds>(
 		now.time_since_epoch()
 		).count();
-
-	//msg_id
-	/*std::ostringstream oss;
-	oss << msg_time;
-	std::string input = oss.str();
-	unsigned char hash[SHA256_DIGEST_LENGTH];
-	SHA256(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), hash);
-	std::ostringstream hash_str;
-	for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
-		hash_str << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
-	std::string msg_id = hash_str.str();*/
 
 	//msg_content
 	std::string msg_content = contents;
@@ -84,7 +75,5 @@ int32_t ChatMessage_SendMessage(ChatUser user_info, std::string receiver, std::s
 
 	//send message
 	p_writer->write(sample);
-	
-	return 0;
 }
 

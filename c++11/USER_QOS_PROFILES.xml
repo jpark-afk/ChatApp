@@ -42,7 +42,7 @@
             file is in the working directory when running the example.
         -->
         <qos_profile name="ChatApp_Profile" 
-                     is_default_qos="true" base_name="BuiltinQosLib::Generic.KeepLastReliable.Persistent">            
+                     is_default_qos="true" base_name="BuiltinQosLib::Generic.KeepLastReliable">            
           
             <!-- QoS specified to override the QoS in the base profile.
                  Configures the DataWriter in the example code. -->
@@ -59,9 +59,6 @@
                 <ownership>
                   <kind>EXCLUSIVE_OWNERSHIP_QOS</kind>
                 </ownership>
-                <ownership_strength>
-                  <value>1000000</value> 
-                </ownership_strength>
             </datawriter_qos>
 
             <!-- QoS specified to override the QoS in the base profile. 
@@ -91,7 +88,7 @@
           <!-- ChatMessage: Persistent Durability (RTI Persistence Service required) -->
           <datawriter_qos topic_filter="ChatMessage">
               <history>
-                  <kind>KEEP_LAST_HISTORY_QOS</kind>
+                  <kind>KEEP_ALL_HISTORY_QOS</kind>
               </history>
               <reliability>
                   <kind>RELIABLE_RELIABILITY_QOS</kind>

@@ -7,6 +7,7 @@
 
 #include "Application.hpp"
 
+/* Simple Writer of ChatUser */
 void ChatUser_WriterThread(dds::pub::DataWriter<ChatUser> writer, ChatUser user_info) {
 	// Wait until connection	
 	do {
@@ -21,6 +22,7 @@ void ChatUser_WriterThread(dds::pub::DataWriter<ChatUser> writer, ChatUser user_
 
 }
 
+/* list all active users */
 void ChatUser_ShowActiveUsers(dds::sub::DataReader<ChatUser> reader)
 {
 	auto samples = reader.read();
@@ -38,3 +40,4 @@ void ChatUser_ShowActiveUsers(dds::sub::DataReader<ChatUser> reader)
 		}
 	}
 }
+

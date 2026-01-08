@@ -40,25 +40,28 @@
 /* Global variables */
 std::chrono::time_point<std::chrono::system_clock> g_reader_creation_time_ChatUser;
 
+dds::pub::DataWriter<ChatUser> * g_writer_user;
 dds::pub::DataWriter<ChatMessage> * g_writer_msg;
 ChatUser g_current_user;
 bool g_debug_enabled = false;
 //////
 
-std::ostream& chatapp_prompt(std::ostream& os) {
-	return os << std::endl << "chatApp>";
-}
-
+/* Listener for ChatUser Reader */
 class ChatUserListener : public dds::sub::NoOpDataReaderListener<ChatUser> {
 public:
 	void on_data_available(dds::sub::DataReader<ChatUser>& reader) override {
-		auto samples = reader.take();
+		auto samples = reader.read();
 		for (const auto& sample : samples) {
 			// New instance
-			if (sample.info().valid() ){//&&
-				//sample.info().state().view_state() == dds::sub::status::ViewState::new_view()) {
+			if (sample.info().valid() &&
+				sample.info().state().view_state() == dds::sub::status::ViewState::new_view()) {
+				
+				// exclude current user info
+				if (sample.info().publication_handle() == g_writer_user->instance_handle()) {
+					continue;
+				}
 
-				//Time filtering
+				//Time filtering : only accept samples were created after me.
 				auto ns = std::chrono::nanoseconds(sample.info().source_timestamp().to_nanosecs());
 				std::chrono::system_clock::time_point src_time(
 					std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)
@@ -68,36 +71,39 @@ public:
 					std::string pid_str("None");
 					std::string ip_str("None");
 
-					// find PID and IP
-					auto writer_handle = sample.info().publication_handle();
-					auto participant_data = rti::sub::matched_publication_participant_data(reader, writer_handle);
-
-					//PID
-					auto all_props = participant_data.extensions().property().get_all();
-					auto pid_it = all_props.find("dds.sys_info.process_id");
-					if (pid_it != all_props.end()) {
-						pid_str = pid_it->second;
-					}
-
-					// IP address
-					for (const auto& locator : participant_data.extensions().default_unicast_locators()) {
-						const auto& addr = locator.address();
-						if (locator.kind() == DDS_LOCATOR_KIND_UDPv4 && (int)addr[12] == 192) {
-							std::ostringstream oss;
-							oss << "IP: "
-								<< (int)addr[12] << "."
-								<< (int)addr[13] << "."
-								<< (int)addr[14] << "."
-								<< (int)addr[15];
-							ip_str = oss.str();
+					try {
+						auto participant_data = rti::sub::matched_publication_participant_data(reader, sample.info().publication_handle());
+					
+						//PID
+						auto all_props = participant_data.extensions().property().get_all();
+						auto pid_it = all_props.find("dds.sys_info.process_id");
+						if (pid_it != all_props.end()) {
+							pid_str = pid_it->second;
 						}
-					}
-					print_debug("# Discovered [", sample.data().user_id(), "] running chat app in IP [", ip_str,
-						"] with Process ID [", pid_str, "].");
-				}
 
+						// IP address
+						for (const auto& locator : participant_data.extensions().default_unicast_locators()) {
+							const auto& addr = locator.address();
+							if (locator.kind() == DDS_LOCATOR_KIND_UDPv4 && (int)addr[12] == 192) {
+								std::ostringstream oss;
+								oss << "IP: "
+									<< (int)addr[12] << "."
+									<< (int)addr[13] << "."
+									<< (int)addr[14] << "."
+									<< (int)addr[15];
+								ip_str = oss.str();
+							}
+						}
+						print_debug("# Discovered [", sample.data().user_id(), "] running chat app in IP [", ip_str,
+							"] with Process ID [", pid_str, "].");
+					}
+					catch (...) {
+						continue;
+					}					
+				}
 			}
-			// Instance dispose or unregister
+
+			// if Instance disposed or unregistered
 			if (!sample.info().valid()) {
 				auto istate = sample.info().state().instance_state();
 				ChatUser key_holder;
@@ -143,29 +149,18 @@ uint32_t make_strength_from_now() {
 	return strength;
 }
 
-/* termination of dds */
-void terminate_participants(void) {
-	std::vector<dds::domain::DomainParticipant> participants;
-	rti::domain::find_participants(std::back_inserter(participants));
-	for (auto& participant : participants) {
-		if (!participant.is_nil()) { 
-			try {
-				participant.close();//implies dispose & unregister relevant to my App's instances
-			}
-			catch (const std::exception& e) {
-				// do nothing
-			}
-		}
-	}
-}
-
 /* Command processor in a chatApp prompt session */
 int processCommand(const std::string& input, dds::sub::DataReader<ChatUser> reader_user) {
 	std::stringstream ss(input);
 	std::string cmd;
 	ss >> cmd;
 
-	if (cmd == "exit") {
+	if (cmd == "quit") {
+		reader_user.close();
+		
+		dds::core::InstanceHandle handle = g_writer_user->lookup_instance(g_current_user);
+		g_writer_user->unregister_instance(handle);
+		
 		return -1;
 	}
 	else if (cmd == "list") {
@@ -183,7 +178,7 @@ int processCommand(const std::string& input, dds::sub::DataReader<ChatUser> read
 		}
 		else {
 			// Send a message to the Writer_ChatMessage
-			int32_t result = ChatMessage_SendMessage(g_current_user, target, message, g_writer_msg);
+			ChatMessage_SendMessage(g_current_user, target, message, g_writer_msg);
 		}
 	}
 	else if (!cmd.empty()) {
@@ -197,9 +192,9 @@ int processCommand(const std::string& input, dds::sub::DataReader<ChatUser> read
 int main(int argc, char* argv[]) {
 	unsigned int domain_id = 0;
 
-	rti::config::Logger::instance().verbosity(rti::config::Verbosity::SILENT);
+	//rti::config::Logger::instance().verbosity(rti::config::Verbosity::SILENT);
 
-	// Parsing Startup Arguments ---
+	///* Parsing Startup Arguments */
 	std::map<std::string, std::string> args;
 	for (int i = 1; i < argc; i++) {
 		std::string arg = argv[i];
@@ -231,7 +226,7 @@ int main(int argc, char* argv[]) {
 		g_debug_enabled = true;
 	}
 
-	// DDS initialization
+	///* DDS initialization */
 	dds::domain::DomainParticipant participant(domain_id);
 	dds::topic::Topic<ChatUser> topic_user(participant, "ChatUserTopic");
 	dds::topic::Topic<ChatMessage> topic_message(participant, "ChatMessageTopic");
@@ -239,34 +234,28 @@ int main(int argc, char* argv[]) {
 
 	dds::pub::Publisher publisher(participant);
 	dds::sub::Subscriber subscriber(participant);	
-		
-	// Reader-ChatUser
-	auto reader_user_qos = qos_provider.extensions().datareader_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatUser");
-	dds::sub::DataReader<ChatUser> reader_user(subscriber, topic_user, reader_user_qos);
-	auto readerListener = std::make_shared<ChatUserListener>();
-	reader_user.set_listener(readerListener, dds::core::status::StatusMask::all());
-	g_reader_creation_time_ChatUser = std::chrono::system_clock::now();
-
-	// Writer-ChatUser
+	
+	///* Writer-ChatUser */
 	auto writer_user_qos = qos_provider.extensions().datawriter_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatUser");
 	uint32_t strength = make_strength_from_now(); //assign a strength value based on time_now
 	writer_user_qos << dds::core::policy::OwnershipStrength(strength);
-
 	dds::pub::DataWriter<ChatUser> writer_user(publisher, topic_user, writer_user_qos);
-
 	// Thread for Writer-ChatUser
 	ChatUser user_info(args["-u"], args["-g"], args["-f"], args["-l"]);
 	g_current_user = user_info;
 	std::thread t_user_w(ChatUser_WriterThread, writer_user, user_info);
 	t_user_w.detach();
+	g_writer_user = &writer_user;
 
-	// Reader-ChatMessage
-	auto reader_msg_qos = qos_provider.extensions().datareader_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatMessage");
+	///* Reader-ChatUser */
+	auto reader_user_qos = qos_provider.extensions().datareader_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatUser");
+	dds::sub::DataReader<ChatUser> reader_user(subscriber, topic_user, reader_user_qos);
+	auto readerListener = std::make_shared<ChatUserListener>();
+	reader_user.set_listener(readerListener, dds::core::status::StatusMask::all());
+	g_reader_creation_time_ChatUser = std::chrono::system_clock::now();
 	
-	/*std::string session_name = user_info.user_id();
-	reader_msg_qos.policy<rti::core::policy::EntityName>().name(session_name);
-	reader_msg_qos.policy<rti::core::policy::EntityName>().role_name(session_name);*/
-	
+	///* Reader-ChatMessage */
+	auto reader_msg_qos = qos_provider.extensions().datareader_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatMessage");		
 	// ContentFilteredTopic
 	std::string filter_expr = "msg_to = %0 OR msg_to = %1";
 	std::vector<std::string> filter_params = {
@@ -283,7 +272,7 @@ int main(int argc, char* argv[]) {
 	std::thread t_msg_r(ChatMessage_ReaderThread, reader_msg);
 	t_msg_r.detach();
 
-	// Writer-ChatMessage
+	///* Writer-ChatMessage */
 	auto writer_msg_qos = qos_provider.extensions().datawriter_qos_w_topic_name("ChatApp_Library::ChatApp_Profile", "ChatMessage");
 	dds::pub::DataWriter<ChatMessage> writer_msg(publisher, topic_message, writer_msg_qos);
 	writer_msg_qos << dds::core::policy::OwnershipStrength(strength);

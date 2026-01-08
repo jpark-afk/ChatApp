@@ -23,7 +23,6 @@ struct ChatUser {
 struct ChatMessage {
 	@key
 	string<MAX_MSG_USER_LEN> msg_from;
-	//string<MAX_MSG_ID_LEN> msg_id;
 
 	string<MAX_MSG_TXT_LEN> msg_content;
 	

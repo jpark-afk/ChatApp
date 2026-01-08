@@ -21,7 +21,7 @@
                 <filter>*</filter>
                 <datawriter_qos>
                     <history>
-                        <kind>KEEP_LAST_HISTORY_QOS</kind>
+                        <kind>KEEP_ALL_HISTORY_QOS</kind>
                     </history>
                     <reliability>
                         <kind>RELIABLE_RELIABILITY_QOS</kind>
